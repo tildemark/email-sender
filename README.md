@@ -168,36 +168,54 @@ Public. No authentication required.
 
 To prevent Gmail, Google Workspace, and other inbox providers from marking emails as spam or outright rejecting them, adhere to the following DNS authentication protocols and content guidelines:
 
-### 1. Mandatory DNS Authentication (SPF, DKIM, DMARC)
+### 1. Mandatory DNS Authentication (SPF, DKIM, DMARC) on Cloudflare
 
-Gmail enforces strict authentication policies for inbound emails. Ensure the following DNS records are configured for your sending domain (e.g. `sanchez.ph`):
+Gmail enforces strict authentication policies for inbound emails. In your **Cloudflare Dashboard > DNS > Records**, configure the following records for your sending domain (e.g., `sanchez.ph`):
+
+> [!IMPORTANT]
+> **Cloudflare Proxy Warning (DNS-Only / Grey Cloud)**:
+> All email-related DNS records (**TXT**, **MX**, and DKIM **CNAME** records) must have Proxy status set to **DNS only** (Grey Cloud ⚪), never Proxied (Orange Cloud 🟠).
 
 #### A. SPF (Sender Policy Framework)
 Authorizes OCI Email Delivery to send emails on behalf of your domain.
 - **Type**: `TXT`
-- **Host / Name**: `@` (or `yourdomain.com.`)
-- **Value**:
+- **Name / Host**: `@` (or root domain)
+- **Content**:
   ```text
   v=spf1 include:email.mail.<oci-region>.oraclecloud.com ~all
   ```
   *(Replace `<oci-region>` with your OCI region identifier, e.g. `ap-tokyo-1`)*
+- **TTL**: Auto
+
+> [!NOTE]
+> If you already have an existing SPF TXT record (e.g. for Google Workspace or Microsoft 365), do **not** add a second SPF record. Instead, combine them into one:
+> `v=spf1 include:_spf.google.com include:email.mail.ap-tokyo-1.oci.oraclecloud.com ~all`
 
 #### B. DKIM (DomainKeys Identified Mail)
 Cryptographically signs outbound emails to verify sender authenticity and integrity.
 1. In the **OCI Console**, navigate to **Developer Services > Email Delivery > Email Domains**.
-2. Select your approved domain and generate a **DKIM Key**.
-3. Publish the generated DKIM `CNAME` or `TXT` record on your DNS provider (e.g., Cloudflare, Route 53).
-4. Verify that DKIM status displays as **Active** in the OCI Console.
+2. Select your email domain and click **Add DKIM Key**.
+3. OCI will provide a **DNS CNAME record** (e.g. `selector1._domainkey` pointing to `selector1.<domain>.dkim.<region>.oraclecloud.com`).
+4. In **Cloudflare DNS**:
+   - **Type**: `CNAME`
+   - **Name**: The selector prefix provided by OCI (e.g. `oci._domainkey` or `s1._domainkey`)
+   - **Target**: The OCI DKIM hostname value
+   - **Proxy status**: **DNS only** (Grey Cloud ⚪ — mandatory!)
+5. Back in the OCI Console, wait 1-2 minutes and verify that the DKIM status shows **Active**.
 
 #### C. DMARC (Domain-based Message Authentication)
-Tells recipient servers what to do if SPF or DKIM fails.
+Tells recipient servers (like Gmail) what to do if SPF or DKIM fails.
 - **Type**: `TXT`
-- **Host / Name**: `_dmarc` (or `_dmarc.yourdomain.com.`)
-- **Value**:
+- **Name**: `_dmarc`
+- **Content**:
   ```text
   v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@yourdomain.com; pct=100;
   ```
-  *(Start with `p=none` for monitoring before transitioning to `p=quarantine` or `p=reject`)*
+  *(Start with `p=none` for monitoring if you prefer, then step up to `p=quarantine` or `p=reject`)*
+- **TTL**: Auto
+
+#### D. MX Records (Optional / If Receiving or using Catch-All)
+If using Cloudflare Email Routing or external mailboxes, keep your MX records active and set to **DNS only**.
 
 ---
 
