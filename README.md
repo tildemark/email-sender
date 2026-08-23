@@ -18,6 +18,98 @@ Designed to run on **Oracle Cloud Infrastructure (OCI) Always Free tier**.
 
 ---
 
+## 📋 Getting Started Checklist
+
+Follow this step-by-step setup guide to take `email-sender` from zero to sending authenticated emails through Oracle Cloud Infrastructure (OCI) and Cloudflare.
+
+```
+┌────────────────────────┐      ┌─────────────────────────┐      ┌────────────────────────┐
+│  1. OCI Email Delivery  │ ───> │  2. Cloudflare DNS &    │ ───> │  3. Configure .env &   │
+│  Setup (Domain, Sender, │      │     Authentication      │      │     Deploy Service     │
+│  SMTP Credentials)     │      │     (SPF, DKIM, DMARC)  │      │     (Docker Compose)   │
+└────────────────────────┘      └─────────────────────────┘      └────────────────────────┘
+```
+
+### ✅ Step 1: OCI Console Setup (Email Delivery)
+
+1. **Create/Verify Email Domain in OCI:**
+   - Log into [Oracle Cloud Console](https://cloud.oracle.com/).
+   - Open navigation menu ☰ > **Developer Services** > **Email Delivery** > **Email Domains**.
+   - Select your compartment and click **Create Email Domain** (e.g. `sanchez.ph`).
+   - Note the **SMTP Endpoint** shown on the page (e.g. `smtp.email.ap-tokyo-1.oci.oraclecloud.com`).
+
+2. **Generate DKIM in OCI:**
+   - Inside your newly created Email Domain, click **DKIM Keys** > **Generate DKIM Key**.
+   - Enter a selector (e.g. `oci` or `s1`) and click **Generate**.
+   - Copy the **DNS CNAME record** (Name and Target value) — you will paste this into Cloudflare.
+
+3. **Add an Approved Sender:**
+   - In the left sidebar under Email Delivery, click **Approved Senders**.
+   - Click **Create Approved Sender**.
+   - Enter the email address you will send from (e.g. `noreply@sanchez.ph`).
+   - *Note: The domain must match your verified Email Domain.*
+
+4. **Generate SMTP Credentials:**
+   - Click your user profile icon (top-right) > **User settings** (or **Identity & Security > Users > your user**).
+   - In the left navigation, click **SMTP Credentials**.
+   - Click **Generate SMTP Credentials**.
+   - Enter a description (e.g. `email-sender-service`) and click **Generate**.
+   - ⚠️ **Important**: Copy both the **Username** (`ocid1.user...`) and **Password** immediately (the password is only displayed once).
+
+---
+
+### ✅ Step 2: Cloudflare DNS Setup (Grey Cloud / DNS Only)
+
+Log into your **Cloudflare Dashboard**, select your domain, and go to **DNS > Records**:
+
+- [ ] **SPF Record (TXT):**
+  - **Type**: `TXT` | **Name**: `@` | **TTL**: `Auto`
+  - **Content**: `v=spf1 include:email.mail.<oci-region>.oraclecloud.com ~all`
+- [ ] **DKIM Record (CNAME):**
+  - **Type**: `CNAME` | **Name**: `<selector>._domainkey` (e.g. `oci._domainkey`)
+  - **Target**: `<from OCI DKIM details>`
+  - **Proxy status**: ⚪ **DNS only** *(Do NOT proxy with orange cloud)*
+- [ ] **DMARC Record (TXT):**
+  - **Type**: `TXT` | **Name**: `_dmarc` | **TTL**: `Auto`
+  - **Content**: `v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@yourdomain.ph; pct=100;`
+
+*Verify in OCI:* Go back to OCI Console > Email Domains > DKIM and confirm status transitions to **Active**.
+
+---
+
+### ✅ Step 3: Local / Server Configuration
+
+1. **Clone repository and create `.env`:**
+   ```bash
+   git clone https://github.com/tildemark/email-sender.git
+   cd email-sender
+   cp .env.example .env
+   ```
+
+2. **Fill in `.env` variables:**
+   ```env
+   PORT=3001
+   NODE_ENV=production
+
+   # OCI SMTP Settings
+   SMTP_HOST=smtp.email.<your-oci-region>.oci.oraclecloud.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=<your_oci_smtp_username_ocid>
+   SMTP_PASS=<your_oci_smtp_password>
+   DEFAULT_FROM="Sanchez Solutions <noreply@yourdomain.ph>"
+
+   # Authorized Client API Keys (generate random secrets for each calling client)
+   ALLOWED_API_KEYS=trace_secret_key_123,equiyield_secret_key_456,portfolio_secret_key_789
+   ```
+
+3. **Start the microservice:**
+   ```bash
+   docker compose up -d --build
+   ```
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Clone & Configure
