@@ -3,15 +3,18 @@
 # --- Build Stage ---
 FROM node:20-alpine AS builder
 
+# Required build tools for better-sqlite3 native compilation
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 
 COPY tsconfig.json ./
 COPY src/ ./src/
 
-RUN npm install typescript --save-dev && npx tsc
+RUN npx tsc
 
 # --- Production Stage ---
 FROM node:20-alpine AS production
@@ -26,9 +29,11 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
-
-# Copy optional templates directory if it exists
+COPY static/ ./static/
 COPY templates/ ./templates/ 2>/dev/null || true
+
+# Prepare data directory with write permissions for appuser
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
 
 USER appuser
 

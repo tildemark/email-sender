@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Sender Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --card: #18181b;
+      --card-border: #27272a;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      width: 100%;
+      max-width: 960px;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      font-size: 1.75rem;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    h1 span.logo-highlight {
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: #27272a;
+      border: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+    }
+
+    .badge-dot.pulsing {
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      100% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .nav-tabs {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.5rem;
+      overflow-x: auto;
+    }
+
+    .nav-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .nav-tab:hover {
+      color: var(--text);
+      background: #1e1e24;
+    }
+
+    .nav-tab.active {
+      color: var(--text);
+      background: var(--card);
+      border-color: var(--card-border);
+      font-weight: 600;
+    }
+
+    main {
+      width: 100%;
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .stat-card {
+      background-color: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    input, textarea, select {
+      background-color: #0d0d10;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      transition: border-color 0.2s ease;
+      width: 100%;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button:active {
+      transform: scale(0.99);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.btn-secondary {
+      background-color: #27272a;
+      color: var(--text);
+    }
+
+    button.btn-secondary:hover {
+      background-color: #3f3f46;
+    }
+
+    button.btn-danger {
+      background-color: #7f1d1d;
+      color: #fca5a5;
+    }
+
+    button.btn-danger:hover {
+      background-color: var(--error);
+      color: white;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+      margin-top: 1rem;
+      border: 1px solid transparent;
+      word-break: break-all;
+    }
+
+    .alert.success {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+
+    .alert.error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    /* History table */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    th {
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #202025;
+    }
+
+    tr:hover td {
+      background-color: #1c1c22;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .pill.sent {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+    }
+
+    .pill.failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+
+    .code-box {
+      background-color: #0c0c0f;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #e4e4e7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="brand-icon">✉️</span>
+      <h1>email<span class="logo-highlight">-sender</span></h1>
+    </div>
+    <div class="header-actions">
+      <div class="badge" id="smtp-badge">
+        <div class="badge-dot pulsing" id="smtp-dot"></div>
+        <span id="smtp-status-text">Checking SMTP...</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav-tabs">
+    <a href="index.html" class="nav-tab active">✉️ Send Console</a>
+    <a href="history.html" class="nav-tab">📜 Dispatch History</a>
+    <a href="settings.html" class="nav-tab">🔑 API Keys</a>
+    <a href="integration.html" class="nav-tab">🔌 API Docs</a>
+  </nav>
+
+  <main>
+    <!-- Overview Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total Dispatches</span>
+        <span class="stat-value" id="stat-total">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Delivered</span>
+        <span class="stat-value" style="color: var(--success);" id="stat-sent">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Failed</span>
+        <span class="stat-value" style="color: var(--error);" id="stat-failed">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Connected Apps</span>
+        <span class="stat-value" style="color: var(--primary);" id="stat-apps">0</span>
+      </div>
+    </div>
+
+    <!-- Live Send Test Console -->
+    <div class="card">
+      <div class="card-title">
+        <span>✉️ Send Email (Test Console)</span>
+      </div>
+      <form id="send-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="app-select">Calling Application (`app`)</label>
+            <input type="text" id="app-input" value="solutions-portfolio" placeholder="e.g. solutions-portfolio, trace, equiyield" required />
+          </div>
+          <div class="form-group">
+            <label for="api-key-input">API Key (`X-API-KEY`)</label>
+            <input type="text" id="api-key-input" placeholder="Enter valid API Key" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="to-input">Recipient (`to`)</label>
+            <input type="email" id="to-input" placeholder="recipient@example.com" required />
+          </div>
+          <div class="form-group">
+            <label for="reply-to-input">Reply-To (Optional)</label>
+            <input type="email" id="reply-to-input" placeholder="replyto@example.com" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="subject-input">Subject</label>
+          <input type="text" id="subject-input" placeholder="e.g. Account Notification or Welcome" required />
+        </div>
+
+        <div class="form-group">
+          <label for="html-input">HTML Body</label>
+          <textarea id="html-input" placeholder="<h3>Hello World</h3><p>This is a test from email-sender.</p>"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="text-input">Plain Text Body (Fallback)</label>
+          <textarea id="text-input" placeholder="Hello World! This is a test from email-sender." rows="3"></textarea>
+        </div>
+
+        <button type="submit" id="send-btn">
+          <span>🚀 Send Email</span>
+        </button>
+
+        <div class="alert" id="result-alert"></div>
+      </form>
+    </div>
+
+    <!-- Recent Logs Snippet -->
+    <div class="card">
+      <div class="card-title">
+        <span>🕒 Recent Activity</span>
+        <a href="history.html" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">View All →</a>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>App</th>
+              <th>Recipient</th>
+              <th>Subject</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="recent-table-body">
+            <tr>
+              <td colspan="5" class="empty-state">Loading recent dispatches...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Fetch stats and live SMTP status
+    async function updateDashboard() {
+      try {
+        const [statsRes, statusRes, keysRes] = await Promise.all([
+          fetch('/api/stats').then(r => r.json()),
+          fetch('/api/status').then(r => r.json()),
+          fetch('/api/keys').then(r => r.json())
+        ]);
+
+        if (statsRes.success) {
+          document.getElementById('stat-total').textContent = statsRes.data.total;
+          document.getElementById('stat-sent').textContent = statsRes.data.sent;
+          document.getElementById('stat-failed').textContent = statsRes.data.failed;
+          document.getElementById('stat-apps').textContent = statsRes.data.apps;
+        }
+
+        const dot = document.getElementById('smtp-dot');
+        const text = document.getElementById('smtp-status-text');
+        if (statusRes.smtp && statusRes.smtp.connected) {
+          dot.style.backgroundColor = 'var(--success)';
+          text.textContent = 'SMTP Connected';
+        } else {
+          dot.style.backgroundColor = 'var(--warning)';
+          text.textContent = statusRes.smtp?.error ? 'SMTP Error' : 'SMTP Not Ready';
+        }
+
+        // Auto-fill first API key if available
+        if (keysRes.success && keysRes.data.length > 0 && !document.getElementById('api-key-input').value) {
+          document.getElementById('api-key-input').value = keysRes.data[0].api_key;
+          document.getElementById('app-input').value = keysRes.data[0].app_name;
+        }
+      } catch (err) {
+        console.error('Failed to load status:', err);
+      }
+    }
+
+    async function loadRecentHistory() {
+      try {
+        const res = await fetch('/api/history?limit=5');
+        const data = await res.json();
+        const tbody = document.getElementById('recent-table-body');
+
+        if (!data.success || data.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No email dispatches yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.data.map(item => `
+          <tr>
+            <td><span class="pill ${item.status}">${item.status}</span></td>
+            <td style="font-family: var(--font-mono); font-size: 0.85rem;">${item.app_name}</td>
+            <td>${item.recipient}</td>
+            <td>${item.subject}</td>
+            <td style="color: var(--text-muted); font-size: 0.8rem;">${new Date(item.timestamp).toLocaleTimeString()}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Error fetching history:', err);
+      }
+    }
+
+    // Handle form submit
+    document.getElementById('send-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('send-btn');
+      const alert = document.getElementById('result-alert');
+
+      const app = document.getElementById('app-input').value.trim();
+      const apiKey = document.getElementById('api-key-input').value.trim();
+      const to = document.getElementById('to-input').value.trim();
+      const replyTo = document.getElementById('reply-to-input').value.trim();
+      const subject = document.getElementById('subject-input').value.trim();
+      const html = document.getElementById('html-input').value.trim();
+      const text = document.getElementById('text-input').value.trim();
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Sending...</span>';
+      alert.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-KEY': apiKey
+          },
+          body: JSON.stringify({
+            app,
+            to,
+            subject,
+            ...(replyTo && { replyTo }),
+            ...(html && { html }),
+            ...(text && { text })
+          })
+        });
+
+        const data = await res.json();
+        alert.style.display = 'block';
+
+        if (res.ok && data.success) {
+          alert.className = 'alert success';
+          alert.innerHTML = `<strong>✅ Email Sent Successfully!</strong><br><span style="font-family: var(--font-mono); font-size: 0.8rem;">Message ID: ${data.messageId}</span>`;
+          loadRecentHistory();
+          updateDashboard();
+        } else {
+          alert.className = 'alert error';
+          alert.innerHTML = `<strong>❌ Error:</strong> ${data.error || 'Failed to send'}<br><span style="font-size: 0.8rem;">${data.details ? JSON.stringify(data.details) : ''}</span>`;
+        }
+      } catch (err) {
+        alert.style.display = 'block';
+        alert.className = 'alert error';
+        alert.textContent = `❌ Network Error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀 Send Email</span>';
+      }
+    });
+
+    updateDashboard();
+    loadRecentHistory();
+    setInterval(updateDashboard, 15000);
+  </script>
+</body>
+</html>

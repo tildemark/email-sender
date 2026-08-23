@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import crypto from 'crypto';
 import { getTransport } from '../services/smtp';
 import { env } from '../config/env';
+import { insertHistory } from '../services/db';
 
 /**
- * Zod schema for the POST /send request body.
- * Both `html` and `text` are optional individually, but at least one must be
- * present — enforced by the `.refine()` at the bottom.
+ * Zod schema for the POST /send (and POST /api/send) request body.
  */
 const sendSchema = z
   .object({
@@ -25,12 +25,11 @@ const sendSchema = z
 export type SendPayload = z.infer<typeof sendSchema>;
 
 /**
- * POST /send
- * Validates the request body, sends the email via SMTP, and returns
- * the Nodemailer messageId on success.
+ * POST /send and POST /api/send
+ * Validates payload, sends via Nodemailer, records dispatch history into SQLite,
+ * and returns status response.
  */
 export async function sendMail(req: Request, res: Response): Promise<void> {
-  // 1. Validate request body
   const result = sendSchema.safeParse(req.body);
   if (!result.success) {
     res.status(400).json({
@@ -42,6 +41,8 @@ export async function sendMail(req: Request, res: Response): Promise<void> {
   }
 
   const { app, to, subject, replyTo, html, text } = result.data;
+  const id = crypto.randomUUID();
+  const timestamp = new Date().toISOString();
 
   try {
     const transport = getTransport();
@@ -54,24 +55,49 @@ export async function sendMail(req: Request, res: Response): Promise<void> {
       ...(html && { html }),
       ...(text && { text }),
       headers: {
-        // Tag source app for audit/tracing
         'X-Mailer-App': app,
       },
     });
 
     console.log(`[email-sender] ✉️  Sent | app=${app} to=${to} messageId=${info.messageId}`);
 
+    // Record successful dispatch in DB
+    insertHistory({
+      id,
+      timestamp,
+      app_name: app,
+      recipient: to,
+      subject,
+      reply_to: replyTo,
+      status: 'sent',
+      message_id: info.messageId,
+    });
+
     res.status(200).json({
       success: true,
+      id,
       messageId: info.messageId,
-      timestamp: new Date().toISOString(),
+      timestamp,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown SMTP error';
     console.error(`[email-sender] ❌ Failed | app=${app} to=${to} error=${message}`);
 
+    // Record failure in DB
+    insertHistory({
+      id,
+      timestamp,
+      app_name: app,
+      recipient: to,
+      subject,
+      reply_to: replyTo,
+      status: 'failed',
+      error_details: message,
+    });
+
     res.status(502).json({
       success: false,
+      id,
       error: 'Failed to deliver email',
       details: message,
     });

@@ -29,16 +29,23 @@ const envSchema = z.object({
   SMTP_PASS: z.string().min(1, 'SMTP_PASS is required'),
   DEFAULT_FROM: z.string().min(1, 'DEFAULT_FROM is required'),
 
-  // Comma-separated list of authorized API keys
+  // Comma-separated list of fallback static authorized API keys
   ALLOWED_API_KEYS: z
     .string()
-    .min(1, 'ALLOWED_API_KEYS must contain at least one key')
+    .default('')
     .transform((v) =>
       v
         .split(',')
         .map((k) => k.trim())
         .filter(Boolean)
     ),
+
+  // Master Admin Key (for administrative access / API key management)
+  ADMIN_API_KEY: z.string().optional(),
+
+  // Dashboard Basic Auth (optional protection for browser UI)
+  DASHBOARD_USERNAME: z.string().default('admin'),
+  DASHBOARD_PASSWORD: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

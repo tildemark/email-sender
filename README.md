@@ -8,13 +8,18 @@ Designed to run on **Oracle Cloud Infrastructure (OCI) Always Free tier**.
 
 ## ✨ Features
 
-- `POST /send` — Send emails from any authorized client app via a single HTTP call
-- `GET /health` — Public health check for OCI load balancers and uptime monitors
-- **API Key authentication** via `X-API-KEY` header
-- **Zod** schema validation on all inputs (environment + request body)
-- **Nodemailer** singleton transport with STARTTLS enforcement
-- **Multi-stage Docker** build (Alpine, non-root user)
-- Structured JSON logging with source app tagging
+- 🖥️ **Web UI Dashboard**: High-aesthetic dark-mode dashboard (identical theme to `sms-sender`):
+  - **Send Console**: Live test form with HTML/plain-text preview and instant dispatch feedback
+  - **Dispatch History**: Filterable and searchable email audit trail with status badges & error logs
+  - **API Keys Manager**: Generate, copy, and revoke client API keys directly from the UI
+  - **Integration Docs**: Multi-language code snippets (cURL, Node.js, Python, PHP)
+- `POST /send` — Send emails from authorized client apps via HTTP POST
+- `GET /health` & `GET /api/status` — Live health checks for load balancers & SMTP connection diagnostics
+- **Persistent SQLite Storage**: Email history and dynamic API keys backed by SQLite in WAL mode
+- **Optional Dashboard Basic Auth**: Protect browser dashboard with `DASHBOARD_USERNAME` & `DASHBOARD_PASSWORD`
+- **API Key Security**: Client requests authenticated via `X-API-KEY` header
+- **Nodemailer + Zod**: Enterprise payload validation with STARTTLS enforcement for OCI Email Delivery
+- **Multi-stage Docker**: Minimal Alpine image running as non-root user with health check and data volume
 
 ---
 
