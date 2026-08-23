@@ -1,0 +1,26 @@
+services:
+  email-sender:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: email-sender:latest
+    container_name: email-sender
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
